@@ -1,0 +1,61 @@
+{
+	"name": "vscode-oj-format",
+	"version": "0.0.1",
+	"displayName": "OJ 题面排版工具",
+	"description": "帮助您快速高效排版 OJ 题面的工具",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/1024th/vscode-markdown-theme"
+	},
+	"keywords": [
+		"OJ",
+		"format"
+	],
+	"publisher": "LinTianchuan",
+	"engines": {
+		"vscode": "^1.15.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"snippets": [
+			{
+				"language": "markdown",
+				"path": "./snippets/markdown.json"
+			}
+		],
+		"markdown.previewStyles": [
+			"./base.css",
+			"./markdown.css"
+		],
+		"commands": [
+			{
+				"command": "OJ.format",
+				"title": "OJ 题目格式化"
+			},
+			{
+				"command": "OJ.add_examples",
+				"title": "OJ 添加样例数据"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "resourceLangId == markdown",
+					"command": "OJ.format",
+					"group": "1_modification"
+				},
+				{
+					"when": "resourceLangId == markdown",
+					"command": "OJ.add_examples",
+					"group": "1_modification"
+				}
+			]
+		}
+	}
+}
