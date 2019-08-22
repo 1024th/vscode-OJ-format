@@ -2,9 +2,9 @@ OJ 题目排版工具。
 
 功能演示：
 
-![](https://github.com/1024th/vscode-OJ-format/assets/1.gif)
+![](https://raw.githubusercontent.com/1024th/vscode-OJ-format/master/assets/1.gif)
 
-![](https://github.com/1024th/vscode-OJ-format/assets/2.gif)
+![](https://raw.githubusercontent.com/1024th/vscode-OJ-format/master/assets/2.gif)
 
 推荐安装插件：[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) 来显示 TeX 公式。
 
