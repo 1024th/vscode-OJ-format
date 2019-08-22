@@ -5,7 +5,7 @@
 	"description": "帮助您快速高效排版 OJ 题面的工具",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/1024th/vscode-markdown-theme"
+		"url": "https://github.com/1024th/vscode-OJ-format"
 	},
 	"keywords": [
 		"OJ",
