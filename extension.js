@@ -52,7 +52,12 @@ class DocumentFormatter {
                     // 中文语境中的单个字母替换为TeX公式
                     line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
                     line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
-                    line = line.replace(/([。，？！；：、「」『』〖〗【】《》（）])([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$$$2$$ $3");
+                    line = line.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
+                    line=line.replace(/^([a-zA-Z]) ([\u4e00-\u9fa5])/g,"$$$1$$ $2");
+                    // 再替换一次，避免形如“A和B”这样的字符串只被替换了A
+                    line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
+                    line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
+                    line = line.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
                     return line;
                 }).join("\n");
                 editorBuilder.replace(this.current_document_range(doc), content);
