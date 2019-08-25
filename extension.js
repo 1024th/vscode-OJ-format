@@ -34,8 +34,12 @@ class DocumentFormatter {
                 //content = this.replaceFullNums(content);
                 //content = this.replaceFullChars(content);
                 // 每行操作
+                let isCode = false;
                 content = content.split("\n").map((line) => {
                     line = this.replacePunctuations(line);
+                    // 判断是否为代码块
+                    if(line.match(/^```/)) isCode = !isCode;
+                    if(isCode) return line;
                     // 中英文、中文与公式之间加空格
                     line = line.replace(/([\u4e00-\u9fa5\u3040-\u30FF])([a-zA-Z0-9\[\(\$])/g, '$1 $2');
                     line = line.replace(/([a-zA-Z0-9\]!;\,\.\:\?\)\$])([\u4e00-\u9fa5\u3040-\u30FF])/g, "$1 $2");
@@ -53,7 +57,7 @@ class DocumentFormatter {
                     line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
                     line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
                     line = line.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
-                    line=line.replace(/^([a-zA-Z]) ([\u4e00-\u9fa5])/g,"$$$1$$ $2");
+                    line = line.replace(/^([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$$$1$$ $2");
                     // 再替换一次，避免形如“A和B”这样的字符串只被替换了A
                     line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
                     line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
