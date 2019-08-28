@@ -1,6 +1,6 @@
 {
 	"name": "vscode-oj-format",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"displayName": "OJ 题面排版工具",
 	"description": "帮助您快速高效排版 OJ 题面的工具",
 	"repository": {
