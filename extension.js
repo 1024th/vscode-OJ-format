@@ -38,8 +38,8 @@ class DocumentFormatter {
                 content = content.split("\n").map((line) => {
                     line = this.replacePunctuations(line);
                     // 判断是否为代码块
-                    if(line.match(/^```/)) isCode = !isCode;
-                    if(isCode) return line;
+                    if (line.match(/^```/)) isCode = !isCode;
+                    if (isCode) return line;
                     // 中英文、中文与公式之间加空格
                     line = line.replace(/([\u4e00-\u9fa5\u3040-\u30FF])([a-zA-Z0-9\[\(\$])/g, '$1 $2');
                     line = line.replace(/([a-zA-Z0-9\]!;\,\.\:\?\)\$])([\u4e00-\u9fa5\u3040-\u30FF])/g, "$1 $2");
@@ -49,19 +49,8 @@ class DocumentFormatter {
                     line = line.replace("”", "」");
                     line = line.replace("‘", "『");
                     line = line.replace("’", "』");
-                    // 数字转为TeX公式
-                    line = line.replace(/ ([0-9][0-9]*) /g, " $$$1$$ ");
-                    line = line.replace(/ ([0-9][0-9]*)([。，？！；：、「」『』〖〗【】《》（）])/g, " $$$1$$$2");
-                    line = line.replace(/([。，？！；：、「」『』〖〗【】《》（）])([0-9][0-9]*) /g, "$1$$$2$$ ");
-                    // 中文语境中的单个字母替换为TeX公式
-                    line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
-                    line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
-                    line = line.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
-                    line = line.replace(/^([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$$$1$$ $2");
-                    // 再替换一次，避免形如“A和B”这样的字符串只被替换了A
-                    line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
-                    line = line.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
-                    line = line.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
+                    //在小代码块(`code`)之外替换中文语境中的数字和单个字母为TeX公式
+                    line = this.JudgeAndReplace(line,"`",this.replaceTeX);
                     return line;
                 }).join("\n");
                 editorBuilder.replace(this.current_document_range(doc), content);
@@ -80,7 +69,42 @@ class DocumentFormatter {
         content = content.replace(/^(.*)(\r?\n\1)+$/gm, "$1");
         return content;
     }
-    replacePunctuations(content) {
+    JudgeAndReplace(content,keyword,replaceMethod){
+        let isSmallCode = true; // 判断是否为小代码块
+        let splited = content.split(keyword);
+        if (splited.length > 2) {
+            content = splited.map((block) => {
+                isSmallCode = !isSmallCode;
+                if (!isSmallCode) {
+                    block = replaceMethod(block);
+                }
+                return block;
+            }).join(keyword);
+        } else {
+            content = replaceMethod(content);
+        }
+        return content;
+    }
+    replaceTeX(content) {
+        // 中文语境中的数字转为TeX公式
+        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
+        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+)([。，？！；：、『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
+        content = content.replace(/([。，？！；：、『』〖〗【】《》（）])([0-9]+) ([\u4e00-\u9fa5])/g, "$1$$$2$$ $3");
+        // 中文语境中的单个字母替换为TeX公式
+        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
+        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
+        content = content.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
+        content = content.replace(/^([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$$$1$$ $2");
+        // 再替换一次，避免形如“A和B”这样的字符串只被替换了A
+        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
+        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+)([。，？！；：、『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
+        content = content.replace(/([。，？！；：、『』〖〗【】《》（）])([0-9]+) ([\u4e00-\u9fa5])/g, "$1$$$2$$ $3");
+        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
+        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
+        content = content.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
+        return content;
+    }
+    replacePunctuations(content) { //替换中文字符之后的英文标点符号为中文标点符号
         content = content.replace(/([\u4e00-\u9fa5\u3040-\u30FF])\.($|\s*)/g, '$1。');
         content = content.replace(/([\u4e00-\u9fa5\u3040-\u30FF]),\s*/g, '$1，');
         content = content.replace(/([\u4e00-\u9fa5\u3040-\u30FF]);\s*/g, '$1；');
