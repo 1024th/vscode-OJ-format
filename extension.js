@@ -13,6 +13,9 @@ function activate(context) {
     });
     context.subscriptions.push(format);
     context.subscriptions.push(add_examples);
+    context.subscriptions.push(vscode.commands.registerCommand('OJ.create_example_folder', (current_uri) => {
+        new create_example_folder(current_uri);
+    }));
     // context.subscriptions.push(new Watcher());
 }
 exports.activate = activate;
@@ -50,7 +53,7 @@ class DocumentFormatter {
                     line = line.replace("‘", "『");
                     line = line.replace("’", "』");
                     //在小代码块(`code`)之外替换中文语境中的数字和单个字母为TeX公式
-                    line = this.JudgeAndReplace(line,"`",this.replaceTeX);
+                    line = this.JudgeAndReplace(line, "`", this.replaceTeX);
                     return line;
                 }).join("\n");
                 editorBuilder.replace(this.current_document_range(doc), content);
@@ -69,7 +72,7 @@ class DocumentFormatter {
         content = content.replace(/^(.*)(\r?\n\1)+$/gm, "$1");
         return content;
     }
-    JudgeAndReplace(content,keyword,replaceMethod){
+    JudgeAndReplace(content, keyword, replaceMethod) {
         let isSmallCode = true; // 判断是否为小代码块
         let splited = content.split(keyword);
         if (splited.length > 2) {
@@ -254,5 +257,75 @@ function add_example_data() {
                     }
                     editor.insertSnippet(vscode.SnippetString(snippet));
                 })
+        });
+}
+
+const fs = require("fs");
+const path = require("path");
+const mkdirp = require("mkdirp");
+
+function create_folder(basePath, included_folders, included_files) {
+    mkdirp(basePath, (err) => {
+        if (err) {
+            vscode.window.showErrorMessage(err.message);
+            throw err;
+        } else {
+            for (let i = 0; i < included_files.length; ++i) {
+                let file_path = path.join(basePath, included_files[i]);
+                // console.log(file_path)
+                fs.writeFile(file_path,"", (err) => {
+                    if (err) {
+                        vscode.window.showErrorMessage(err.message);
+                        throw err;
+                    }
+                    // console.log('The file has been saved!');
+                });
+            }
+            for (let i = 0; i < included_folders.length; ++i) {
+                let folder_path = path.join(basePath, included_folders[i]);
+                mkdirp(folder_path, (err) => {
+                    if (err) {
+                        vscode.window.showErrorMessage(err.message);
+                        throw err;
+                    }
+                })
+            }
+        }
+    })
+
+}
+
+function create_example_folder(current_uri) {
+    // console.log(current_uri)
+    // const basePath = current_uri.fsPath.replace(/\\/g, "/");
+    const basePath = current_uri.fsPath;
+    // console.log(basePath)
+    vscode.window.showInputBox(
+        {
+            password: false, // 输入内容是否是密码
+            ignoreFocusOut: true, // 默认false，设置为true时鼠标点击别的地方输入框不会消失
+            prompt: '输入微课标题', // 在输入框下方的提示信息
+            value: '微课 x.x.x'
+        }).then(function (title) {
+            vscode.window.showInputBox(
+                {
+                    password: false, // 输入内容是否是密码
+                    ignoreFocusOut: true, // 默认false，设置为true时鼠标点击别的地方输入框不会消失
+                    placeHolder: '输入一个正整数', // 在输入框内的提示信息
+                    prompt: '例题个数？', // 在输入框下方的提示信息
+                    validateInput: function (text) {
+                        // if (text == "0") return text;
+                        var patrn = /^[1-9]\d*$/;
+                        if (!patrn.exec(text)) return "格式不符";
+                    } // 对输入进行验证并返回错误提示
+                }).then(function (num) {
+                    num = Number(num);
+                    let files = ["题面.md", "题解.md", "std.cpp"];
+                    let folders = ["数据"];
+                    for (let i = 1; i <= num; ++i) {
+                        let new_folder = path.join(basePath, "/「" + title + " 例 " + String(i) + "」x");
+                        create_folder(new_folder, folders, files);
+                    }
+                });
         });
 }

@@ -6,13 +6,17 @@ OJ 题目排版工具。
 
 ![](https://raw.githubusercontent.com/1024th/vscode-OJ-format/master/assets/2.gif)
 
+![](https://raw.githubusercontent.com/1024th/vscode-OJ-format/master/assets/3.gif)
+
 推荐安装插件：[Markdown All in One](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one) 来显示 TeX 公式。
 
 部分功能参考插件：[Pangu-Markdown](https://marketplace.visualstudio.com/items?itemName=xlthu.Pangu-Markdown)，深表感谢。
 
 **本插件功能一览：**
 
-编辑 markdown 文件时，右键菜单内包括指令“OJ 题目格式化”和“OJ 添加样例数据”
+编辑 markdown 文件时，右键菜单内包括指令“OJ 题目格式化”和“OJ 添加样例数据”。
+
+资源管理器右键菜单内包括指令“OJ 创建例题文件夹”。
 
 OJ 题目格式化：
 
@@ -34,6 +38,10 @@ OJ 题目格式化：
 OJ 添加样例数据：
 
 输入样例组数，选择是否添加样例提示，便可生成样例输入输出模板。
+
+OJ 创建例题文件夹：
+
+在资源管理器中右键“例题训练包”文件夹，选择“OJ 创建例题文件夹”，输入微课标题和例题个数，即可生成多个例题文件夹。
 
 **内置 Snippets:** 
 

@@ -1,5 +1,11 @@
 # Change Log
 
+## V0.0.6
+
+- Update:
+  
+  加入功能`创建例题文件夹`。
+
 ## v0.0.5
 
 - Bug Fixed:  

@@ -1,6 +1,6 @@
 {
 	"name": "vscode-oj-format",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"displayName": "OJ 题面排版工具",
 	"description": "帮助您快速高效排版 OJ 题面的工具",
 	"repository": {
@@ -41,9 +41,19 @@
 			{
 				"command": "OJ.add_examples",
 				"title": "OJ 添加样例数据"
+			},
+			{
+				"command": "OJ.create_example_folder",
+				"title": "OJ 创建例题文件夹"
 			}
 		],
 		"menus": {
+			"explorer/context": [
+				{
+					"command": "OJ.create_example_folder",
+					"group": "navigation"
+				}
+			],
 			"editor/context": [
 				{
 					"when": "resourceLangId == markdown",
@@ -57,5 +67,12 @@
 				}
 			]
 		}
+	},
+	"devDependencies": {
+		"@types/node": "^6.0.40"
+	},
+	"dependencies": {
+		"@types/mkdirp": "^0.5.2",
+		"mkdirp": "^0.5.1"
 	}
 }
