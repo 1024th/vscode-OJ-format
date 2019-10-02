@@ -301,13 +301,16 @@ function create_example_folder(current_uri) {
     // console.log(current_uri)
     // const basePath = current_uri.fsPath.replace(/\\/g, "/");
     const basePath = current_uri.fsPath;
-    // console.log(basePath)
+    let get_title = basePath.match(/微课 [0-9]\.[0-9]\.[0-9]/g);
+    // console.log(get_title)
+    if(get_title) get_title = get_title[get_title.length-1];
+    else get_title = '微课 x.x.x'
     vscode.window.showInputBox(
         {
             password: false, // 输入内容是否是密码
             ignoreFocusOut: true, // 默认false，设置为true时鼠标点击别的地方输入框不会消失
-            prompt: '输入微课标题', // 在输入框下方的提示信息
-            value: '微课 x.x.x'
+            prompt: '输入微课编号', // 在输入框下方的提示信息
+            value: get_title
         }).then(function (title) {
             vscode.window.showInputBox(
                 {
