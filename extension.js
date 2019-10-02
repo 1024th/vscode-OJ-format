@@ -262,18 +262,21 @@ function add_example_data() {
 
 const fs = require("fs");
 const path = require("path");
-const mkdirp = require("mkdirp");
 
 function create_folder(basePath, included_folders, included_files) {
-    mkdirp(basePath, (err) => {
+    fs.mkdir(basePath, (err) => {
         if (err) {
-            vscode.window.showErrorMessage(err.message);
+            if (err.message.startsWith("EEXIST: file already exists, mkdir")) {
+                vscode.window.showWarningMessage("文件夹 “" + path.basename(basePath) + "” 已存在！");
+            }else{
+                vscode.window.showErrorMessage(err.message);
+            }
             throw err;
         } else {
             for (let i = 0; i < included_files.length; ++i) {
                 let file_path = path.join(basePath, included_files[i]);
                 // console.log(file_path)
-                fs.writeFile(file_path,"", (err) => {
+                fs.writeFile(file_path, "", { "flag": "a" }, (err) => {
                     if (err) {
                         vscode.window.showErrorMessage(err.message);
                         throw err;
@@ -283,7 +286,7 @@ function create_folder(basePath, included_folders, included_files) {
             }
             for (let i = 0; i < included_folders.length; ++i) {
                 let folder_path = path.join(basePath, included_folders[i]);
-                mkdirp(folder_path, (err) => {
+                fs.mkdir(folder_path, (err) => {
                     if (err) {
                         vscode.window.showErrorMessage(err.message);
                         throw err;
@@ -292,7 +295,6 @@ function create_folder(basePath, included_folders, included_files) {
             }
         }
     })
-
 }
 
 function create_example_folder(current_uri) {
