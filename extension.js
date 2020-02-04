@@ -127,38 +127,8 @@ class DocumentFormatter {
     // e.g. split_by=="`"，就是在代码块外执行replaceMethod
     notIn(content, split_by, replaceMethod, join_by) {
         if (!join_by) { join_by = split_by; }
-        // let inside = true; // 判断是否在keyword所包围的文本内
-        // let splited = content.split(keyword);
-        // if (splited.length > 2) {
-        //     content = splited.map((block) => {
-        //         inside = !inside;
-        //         if (!inside) {
-        //             block = replaceMethod(block);
-        //         }
-        //         return block;
-        //     }).join(keyword);
-        // } else {
-        //     content = replaceMethod(content);
-        // }
-        // return content;
         return this.isIn(content, split_by, replaceMethod, join_by, true);
     }
-    // JudgeAndReplace(content, keyword, replaceMethod) {
-    //     let isSmallCode = true; // 判断是否为小代码块
-    //     let splited = content.split(keyword);
-    //     if (splited.length > 2) {
-    //         content = splited.map((block) => {
-    //             isSmallCode = !isSmallCode;
-    //             if (!isSmallCode) {
-    //                 block = replaceMethod(block);
-    //             }
-    //             return block;
-    //         }).join(keyword);
-    //     } else {
-    //         content = replaceMethod(content);
-    //     }
-    //     return content;
-    // }
     addLeftRight(content) { // TeX公式括号两边补全\left和\right
         content = content.replace(/(?<!\\left *)(\(|\[|\\\{)/g, "\\left$1");
         content = content.replace(/(?<!\\right *)(\)|\]|\\\})/g, "\\right$1");
