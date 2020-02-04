@@ -23,8 +23,21 @@ exports.activate = activate;
 function deactivate() { }
 exports.deactivate = deactivate;
 
+class Config {
+    constructor() {
+        this._config = vscode.workspace.getConfiguration('OJ');
+        this.single_letter = this._config.get("transform single letter to TeX");
+        this.number = this._config.get("transform number to TeX");
+        this.add = this._config.get('TeX add \\left and \\right');
+    }
+}
 class DocumentFormatter {
     updateDocument() {
+        let config = new Config;
+        console.log(config);
+        console.log(config.single_letter);
+        console.log(config.number);
+        console.log(config.add);
         let editor = vscode.window.activeTextEditor;
         let doc = editor.document;
         // Only update status if an Markdown file
@@ -38,11 +51,21 @@ class DocumentFormatter {
                 //content = this.replaceFullChars(content);
                 // 每行操作
                 let isCode = false;
+                let isEquation = false;
                 content = content.split("\n").map((line) => {
                     line = this.replacePunctuations(line);
                     // 判断是否为代码块
                     if (line.match(/^```/)) isCode = !isCode;
                     if (isCode) return line;
+                    else {
+                        if (line.match(/^\$\$.*?\$\$ *$/)) {
+                            if (config.add) line = this.addLeftRight(line);
+                        }
+                        else {
+                            if (line.match(/^\$\$ */)) isEquation = !isEquation;
+                            if (config.add && isEquation) line = this.addLeftRight(line);
+                        }
+                    }
                     // 中英文、中文与公式之间加空格
                     line = line.replace(/([\u4e00-\u9fa5\u3040-\u30FF])([a-zA-Z0-9\[\(\$])/g, '$1 $2');
                     line = line.replace(/([a-zA-Z0-9\]!;\,\.\:\?\)\$])([\u4e00-\u9fa5\u3040-\u30FF])/g, "$1 $2");
@@ -52,8 +75,17 @@ class DocumentFormatter {
                     line = line.replace("”", "」");
                     line = line.replace("‘", "『");
                     line = line.replace("’", "』");
-                    //在小代码块(`code`)之外替换中文语境中的数字和单个字母为TeX公式
-                    line = this.JudgeAndReplace(line, "`", this.replaceTeX);
+                    // 在小代码块(`code`)之外替换中文语境中的数字和单个字母为TeX公式
+                    if (config.single_letter) {
+                        line = this.notIn(line, "`", this.singleLetterToTeX);
+                    }
+                    if (config.number) {
+                        line = this.notIn(line, "`", this.numberToTeX);
+                    }
+                    // TeX公式括号两边补全\left和\right
+                    if (config.add) {
+                        line = this.notIn(line, "`", (content) => this.isIn(content, /(?<!\$)\$(?!\$)/g, this.addLeftRight, "$"));
+                    }
                     return line;
                 }).join("\n");
                 editorBuilder.replace(this.current_document_range(doc), content);
@@ -68,46 +100,87 @@ class DocumentFormatter {
         let range = new vscode.Range(start, end);
         return range;
     }
-    condenseContent(content) {
+    condenseContent(content) { //去除连续空行
         content = content.replace(/^(.*)(\r?\n\1)+$/gm, "$1");
         return content;
     }
-    JudgeAndReplace(content, keyword, replaceMethod) {
-        let isSmallCode = true; // 判断是否为小代码块
-        let splited = content.split(keyword);
+    // 对被split_by包围的文本执行replaceMethod，并返回修改后的content
+    // e.g. split_by=="$"，就是在公式内执行replaceMethod
+    isIn(content, split_by, replaceMethod, join_by, reverse = false) {
+        if (!join_by) { join_by = split_by; }
+        let inside = true; // 判断是否在keyword所包围的文本内
+        let splited = content.split(split_by);
         if (splited.length > 2) {
             content = splited.map((block) => {
-                isSmallCode = !isSmallCode;
-                if (!isSmallCode) {
+                inside = !inside;
+                if (reverse ? (!inside) : inside) {
                     block = replaceMethod(block);
                 }
                 return block;
-            }).join(keyword);
+            }).join(join_by);
         } else {
             content = replaceMethod(content);
         }
         return content;
     }
-    replaceTeX(content) {
-        // 中文语境中的数字转为TeX公式
-        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
-        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+)([。，？！；：、『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
-        content = content.replace(/([。，？！；：、『』〖〗【】《》（）])([0-9]+) ([\u4e00-\u9fa5])/g, "$1$$$2$$ $3");
-        // 中文语境中的单个字母替换为TeX公式
-        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
-        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
-        content = content.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
-        content = content.replace(/^([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$$$1$$ $2");
-        // 再替换一次，避免形如“A和B”这样的字符串只被替换了A
-        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
-        content = content.replace(/([\u4e00-\u9fa5]) ([0-9]+)([。，？！；：、『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
-        content = content.replace(/([。，？！；：、『』〖〗【】《》（）])([0-9]+) ([\u4e00-\u9fa5])/g, "$1$$$2$$ $3");
-        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1 $$$2$$ $3");
-        content = content.replace(/([\u4e00-\u9fa5]) ([a-zA-Z])([。，？！；：、「」『』〖〗【】《》（）])/g, "$1 $$$2$$$3");
-        content = content.replace(/([。，？！；：、「」『』〖〗【】《》（）])( ?)([a-zA-Z]) ([\u4e00-\u9fa5])/g, "$1$2$$$3$$ $4");
+    // 对不被split_by包围的文本执行replaceMethod，并返回修改后的content
+    // e.g. split_by=="`"，就是在代码块外执行replaceMethod
+    notIn(content, split_by, replaceMethod, join_by) {
+        if (!join_by) { join_by = split_by; }
+        // let inside = true; // 判断是否在keyword所包围的文本内
+        // let splited = content.split(keyword);
+        // if (splited.length > 2) {
+        //     content = splited.map((block) => {
+        //         inside = !inside;
+        //         if (!inside) {
+        //             block = replaceMethod(block);
+        //         }
+        //         return block;
+        //     }).join(keyword);
+        // } else {
+        //     content = replaceMethod(content);
+        // }
+        // return content;
+        return this.isIn(content, split_by, replaceMethod, join_by, true);
+    }
+    // JudgeAndReplace(content, keyword, replaceMethod) {
+    //     let isSmallCode = true; // 判断是否为小代码块
+    //     let splited = content.split(keyword);
+    //     if (splited.length > 2) {
+    //         content = splited.map((block) => {
+    //             isSmallCode = !isSmallCode;
+    //             if (!isSmallCode) {
+    //                 block = replaceMethod(block);
+    //             }
+    //             return block;
+    //         }).join(keyword);
+    //     } else {
+    //         content = replaceMethod(content);
+    //     }
+    //     return content;
+    // }
+    addLeftRight(content) { // TeX公式括号两边补全\left和\right
+        content = content.replace(/(?<!\\left *)(\(|\[|\\\{)/g, "\\left$1");
+        content = content.replace(/(?<!\\right *)(\)|\]|\\\})/g, "\\right$1");
         return content;
     }
-    replacePunctuations(content) { //替换中文字符之后的英文标点符号为中文标点符号
+    singleLetterToTeX(content) {
+        // 中文语境中的单个字母替换为TeX公式
+        content = content.replace(/(?<=[\u4e00-\u9fa5] )([a-zA-Z])(?= [\u4e00-\u9fa5])/g, "$$$1$$");
+        content = content.replace(/(?<=[\u4e00-\u9fa5] )([a-zA-Z])(?=[。，？！；：、「」『』〖〗【】《》（）])/g, "$$$1$$");
+        content = content.replace(/(?<=[。，？！；：、「」『』〖〗【】《》（）] ?)([a-zA-Z])(?= [\u4e00-\u9fa5])/g, "$$$1$$");
+        content = content.replace(/^([a-zA-Z])(?= [\u4e00-\u9fa5])/g, "$$$1$$");
+        return content;
+    }
+    numberToTeX(content) {
+        // 中文语境中的数字替换为TeX公式
+        content = content.replace(/(?<=[\u4e00-\u9fa5] )([0-9]+)(?= [\u4e00-\u9fa5])/g, "$$$1$$");
+        content = content.replace(/(?<=[\u4e00-\u9fa5] )([0-9]+)(?=[。，？！；：、「」『』〖〗【】《》（）])/g, "$$$1$$");
+        content = content.replace(/(?<=[。，？！；：、「」『』〖〗【】《》（）] ?)([0-9]+)(?= [\u4e00-\u9fa5])/g, "$$$1$$");
+        content = content.replace(/^([0-9]+])(?= [\u4e00-\u9fa5])/g, "$$$1$$");
+        return content;
+    }
+    replacePunctuations(content) { // 替换中文字符之后的英文标点符号为中文标点符号
         content = content.replace(/([\u4e00-\u9fa5\u3040-\u30FF])\.($|\s*)/g, '$1。');
         content = content.replace(/([\u4e00-\u9fa5\u3040-\u30FF]),\s*/g, '$1，');
         content = content.replace(/([\u4e00-\u9fa5\u3040-\u30FF]);\s*/g, '$1；');
@@ -268,7 +341,7 @@ function create_folder(basePath, included_folders, included_files) {
         if (err) {
             if (err.message.startsWith("EEXIST: file already exists, mkdir")) {
                 vscode.window.showWarningMessage("文件夹 “" + path.basename(basePath) + "” 已存在！");
-            }else{
+            } else {
                 vscode.window.showErrorMessage(err.message);
             }
             throw err;
@@ -303,7 +376,7 @@ function create_example_folder(current_uri) {
     const basePath = current_uri.fsPath;
     let get_title = basePath.match(/微课 [0-9]\.[0-9]\.[0-9]/g);
     // console.log(get_title)
-    if(get_title) get_title = get_title[get_title.length-1];
+    if (get_title) get_title = get_title[get_title.length - 1];
     else get_title = '微课 x.x.x'
     vscode.window.showInputBox(
         {
