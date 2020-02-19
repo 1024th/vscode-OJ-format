@@ -26,18 +26,18 @@ exports.deactivate = deactivate;
 class Config {
     constructor() {
         this._config = vscode.workspace.getConfiguration('OJ');
-        this.single_letter = this._config.get("transform single letter to TeX");
-        this.number = this._config.get("transform number to TeX");
-        this.add = this._config.get('TeX add \\left and \\right');
+        this.single_letter = this._config.get("transformSingleLetterToTex");
+        this.number = this._config.get("transformNumberToTex");
+        this.add = this._config.get("texAddLeftAndRight");
     }
 }
 class DocumentFormatter {
     updateDocument() {
         let config = new Config;
-        console.log(config);
-        console.log(config.single_letter);
-        console.log(config.number);
-        console.log(config.add);
+        //console.log(config);
+        //console.log(config.single_letter);
+        //console.log(config.number);
+        //console.log(config.add);
         let editor = vscode.window.activeTextEditor;
         let doc = editor.document;
         // Only update status if an Markdown file
@@ -109,18 +109,13 @@ class DocumentFormatter {
     isIn(content, split_by, replaceMethod, join_by, reverse = false) {
         if (!join_by) { join_by = split_by; }
         let inside = true; // 判断是否在keyword所包围的文本内
-        let splited = content.split(split_by);
-        if (splited.length > 2) {
-            content = splited.map((block) => {
-                inside = !inside;
-                if (reverse ? (!inside) : inside) {
-                    block = replaceMethod(block);
-                }
-                return block;
-            }).join(join_by);
-        } else {
-            content = replaceMethod(content);
-        }
+        content = content.split(split_by).map((block) => {
+            inside = !inside;
+            if (reverse ? (!inside) : inside) {
+                block = replaceMethod(block);
+            }
+            return block;
+        }).join(join_by);
         return content;
     }
     // 对不被split_by包围的文本执行replaceMethod，并返回修改后的content

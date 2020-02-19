@@ -1,6 +1,6 @@
 {
     "name": "vscode-oj-format",
-    "version": "0.0.9",
+    "version": "0.1.0",
     "displayName": "OJ 题面排版工具",
     "description": "帮助您快速高效排版 OJ 题面的工具",
     "repository": {
@@ -13,7 +13,7 @@
     ],
     "publisher": "LinTianchuan",
     "engines": {
-        "vscode": "^1.15.0"
+        "vscode": "^1.37.0"
     },
     "categories": [
         "Other"
@@ -70,17 +70,17 @@
         "configuration": {
             "title": "OJ 排版格式化",
             "properties": {
-                "OJ.transform single letter to Tex": {
+                "OJ.transformSingleLetterToTex": {
                     "type": "boolean",
                     "default": true,
                     "description": "将单个字母转为 TeX 公式"
                 },
-                "OJ.transform number to Tex": {
+                "OJ.transformNumberToTex": {
                     "type": "boolean",
                     "default": true,
                     "description": "将数字转为 TeX 公式"
                 },
-                "OJ.TeX add \\left and \\right": {
+                "OJ.texAddLeftAndRight": {
                     "type": "boolean",
                     "default": false,
                     "description": "TeX 公式括号两边补全 \\left 和 \\right"
